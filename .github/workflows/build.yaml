@@ -1,0 +1,63 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+  GCP_REGION: asia-northeast1
+  ECR_REGISTRY: gcr.io/${{ secrets.GCP_PROJECT }}
+  ECR_REPOSITORY: cloud-vision
+  CLOUDRUN_SERVICE: cloud-vision
+
+jobs:
+  Build:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # checkout
+      - uses: actions/checkout@master
+
+      # install nodejs
+      - uses: actions/setup-node@master
+        with:
+          node-version: 12.x
+
+      # GCP Login
+      - name: GCP Authenticate
+        uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        with:
+          version: '290.0.1'
+          service_account_email: ${{ secrets.GCP_SA_EMAIL }}
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          export_default_credentials: true
+
+      # Library install
+      - name: install and build
+        run: |
+          yarn install --production
+          yarn build
+
+      # Configure docker to use the gcloud command-line tool as a credential helper
+      - name: Set up docker to authenticate via gcloud command-line tool.
+        run: |
+          gcloud auth configure-docker
+
+      # GCR Push
+      - name: Push the docker image
+        run: |
+          docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      # CloudRun Deploy
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy $CLOUDRUN_SERVICE \
+            --image $ECR_REGISTRY/$ECR_REPOSITORY:latest \
+            --project $GCP_PROJECT \
+            --region $GCP_REGION \
+            --platform managed \
+            --quiet
