@@ -38,7 +38,7 @@ jobs:
       # Library install
       - name: install and build
         run: |
-          yarn install --production
+          yarn install
           yarn build
 
       # Configure docker to use the gcloud command-line tool as a credential helper
