@@ -7,7 +7,7 @@
   "scripts": {
     "start": "nodemon ./src/index.ts",
     "prebuild": "tsc",
-    "build": "docker build -t vision-api ."
+    "build": "docker build -t vision ."
   },
   "devDependencies": {
     "@types/cors": "^2.8.6",

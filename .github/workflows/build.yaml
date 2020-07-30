@@ -9,8 +9,8 @@ env:
   GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
   GCP_REGION: asia-northeast1
   ECR_REGISTRY: gcr.io/${{ secrets.GCP_PROJECT }}
-  ECR_REPOSITORY: cloud-vision
-  CLOUDRUN_SERVICE: cloud-vision
+  ECR_REPOSITORY: vision
+  CLOUDRUN_SERVICE: vision
 
 jobs:
   Build:
