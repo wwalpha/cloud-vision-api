@@ -61,3 +61,7 @@ jobs:
             --region $GCP_REGION \
             --platform managed \
             --quiet
+
+      # Cloud Endpoints Update
+      - name: Update Cloud Enpoints
+        run: gcloud endpoints services deploy api.yaml
