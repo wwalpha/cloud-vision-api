@@ -4,11 +4,11 @@ info:
   description: APIGateway for endpoints
   version: 1.0.0
 host: endpoint-rbiyrqzyqa-an.a.run.app
-# securityDefinitions:
-#   api_key:
-#     type: apiKey
-#     name: key
-#     in: query
+securityDefinitions:
+  api_key:
+    type: apiKey
+    name: key
+    in: query
 schemes:
   - https
 produces:
@@ -16,6 +16,15 @@ produces:
 x-google-backend:
   address: https://vision-rbiyrqzyqa-an.a.run.app
 paths:
+  /:
+    post:
+      summary: health check
+      operationId: root
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: string
   /image2words:
     post:
       summary: image2words
@@ -25,8 +34,8 @@ paths:
           description: A successful response
           schema:
             type: string
-      # security:
-      #   - api_key: []
+      security:
+        - api_key: []
   /image2lines:
     post:
       summary: image2lines
@@ -36,5 +45,5 @@ paths:
           description: A successful response
           schema:
             type: string
-      # security:
-      #   - api_key: []
+      security:
+        - api_key: []
