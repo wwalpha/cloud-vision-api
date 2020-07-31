@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
 import { getInlineWords, getClient } from './utils';
 import { Image2LinesResponse, Image2LinesRequest } from 'typings/types';
 
@@ -16,7 +15,7 @@ export default async (req: Request<any, any, Image2LinesRequest, any>, res: Resp
     ?.map((page) => {
       // page blocks to lines
       const lines = page.blocks
-        ?.map((block) => getInlineWords(block))
+        ?.map((block) => getInlineWords(request.language, block))
         .filter((item) => item)
         .map((item) => item!);
 

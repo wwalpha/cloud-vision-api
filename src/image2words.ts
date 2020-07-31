@@ -15,7 +15,7 @@ export default async (req: Request<any, any, Image2WordsRequest, any>, res: Resp
     ?.map((page) => {
       // page blocks to lines
       const lines = page.blocks
-        ?.map((block) => getInlineWords(block))
+        ?.map((block) => getInlineWords(request.language, block))
         .filter((item) => item)
         .map((item) => item!);
 

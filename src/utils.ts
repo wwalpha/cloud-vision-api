@@ -4,7 +4,7 @@ const client = new ImageAnnotatorClient();
 
 export const getClient = () => client;
 
-export const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
+export const getInlineWords = (languageCode: string, block: protos.google.cloud.vision.v1.IBlock) => {
   const words = block.paragraphs
     ?.map((paragraph) =>
       paragraph.words
@@ -13,7 +13,7 @@ export const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
           if (symbols === null || symbols === undefined) return '';
 
           // filter by language code
-          const results = filterLanguageCode('en', symbols);
+          const results = filterLanguageCode(languageCode, symbols);
 
           // empty check
           if (results.length === 0) return '';
