@@ -17,7 +17,7 @@ x-google-backend:
   address: https://vision-rbiyrqzyqa-an.a.run.app
 paths:
   /:
-    post:
+    get:
       summary: health check
       operationId: root
       responses:
