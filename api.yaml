@@ -17,7 +17,7 @@ x-google-backend:
   address: https://vision-rbiyrqzyqa-an.a.run.app
 paths:
   /image2words:
-    get:
+    post:
       summary: image2words
       operationId: image2words
       responses:
@@ -28,7 +28,7 @@ paths:
       security:
         - api_key: []
   /image2lines:
-    get:
+    post:
       summary: image2lines
       operationId: image2lines
       responses:

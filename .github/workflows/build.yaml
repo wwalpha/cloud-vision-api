@@ -64,4 +64,4 @@ jobs:
 
       # Cloud Endpoints Update
       - name: Update Cloud Enpoints
-        run: gcloud endpoints services deploy api.yaml
+        run: gcloud endpoints services deploy api.yaml --project $GCP_PROJECT
