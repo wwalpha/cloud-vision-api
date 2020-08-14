@@ -13,7 +13,7 @@ app.use(cors());
 app.use((req: Request, res: Response, next: NextFunction) => {
   console.info(`${req.method} ${req.originalUrl}`);
   console.info('Headers', JSON.stringify(req.headers));
-  console.info('Body', JSON.stringify(req.body));
+  // console.info('Body', JSON.stringify(req.body));
 
   next();
 });
