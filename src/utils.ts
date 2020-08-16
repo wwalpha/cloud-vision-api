@@ -33,7 +33,7 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
   return merged;
 };
 
-const reg = new RegExp(/[A-Za-z]+$/);
+const reg = new RegExp(/^[A-Za-z]+$/);
 
 // filter by language code
 export const filterLanguageCode = (languageCode: string, symbols: protos.google.cloud.vision.v1.ISymbol[]) => {
