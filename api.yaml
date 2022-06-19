@@ -47,3 +47,14 @@ paths:
             type: string
       security:
         - api_key: []
+  /image2texts:
+    post:
+      summary: image2texts
+      operationId: image2texts
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: string
+      security:
+        - api_key: []
