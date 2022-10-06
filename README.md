@@ -6,6 +6,7 @@
 | ------------ | ------------ |
 | /image2line  | detect lines |
 | /image2words | detect words |
+| /image2texts | detect texts |
 
 ## Credentials
 
