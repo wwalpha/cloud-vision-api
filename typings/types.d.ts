@@ -11,3 +11,12 @@ export interface Image2LinesRequest {
 }
 
 export type Image2LinesResponse = string[];
+
+export interface HandwritingRequest {
+  content: string;
+  language: string;
+}
+
+export interface HandwritingResponse {
+  text: string;
+}

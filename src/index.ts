@@ -4,6 +4,7 @@ import cors from 'cors';
 import Image2Lines from './image2lines';
 import Image2Words from './image2words';
 import Image2Texts from './image2texts';
+import Handwriting from './handwriting';
 
 const app = express();
 
@@ -30,6 +31,9 @@ app.post('/image2words', (req, res) => Image2Words(req, res));
 
 // image to texts
 app.post('/image2texts', (req, res) => Image2Texts(req, res));
+
+// hand writing image to text
+app.post('/handwriting', (req, res) => Handwriting(req, res));
 
 app.listen(process.env.EXPOSE_PORT || 8080, () => {
   console.log('Started...');
