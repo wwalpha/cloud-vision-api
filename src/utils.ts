@@ -36,6 +36,8 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
 
       const lines = items.filter((s): s is Exclude<typeof s, undefined> => s !== undefined);
 
+      if (lines.length === 0) return undefined;
+
       const hirakana = filterHirakana(lines);
 
       console.log('hirakana', hirakana);
@@ -209,6 +211,7 @@ export const filterHirakana = (lines: SymbolLine[]): SymbolLine | undefined => {
 const hirakanaJoin = (lines: SymbolLine[]): SymbolLine => {
   const line = lines.map((item) => item.word).join('');
 
+  console.log('hirakanaJoin', lines);
   return {
     x: lines[0].x,
     y: lines[0].y,
