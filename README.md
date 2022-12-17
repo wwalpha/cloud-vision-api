@@ -11,5 +11,6 @@
 ## Credentials
 
 ```
+
 export GOOGLE_APPLICATION_CREDENTIALS="/workspaces/cloud-vision-api/vision-api.json"
 ```
