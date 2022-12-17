@@ -20,3 +20,9 @@ export interface HandwritingRequest {
 export interface HandwritingResponse {
   text: string;
 }
+
+export interface SymbolLine {
+  x: number;
+  y: number;
+  word: string;
+}

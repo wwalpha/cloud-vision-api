@@ -11,5 +11,5 @@
 ## Credentials
 
 ```
-export GOOGLE_APPLICATION_CREDENTIALS="/home/ec2-user/github/cloud-vision-api/vision-api.json"
+export GOOGLE_APPLICATION_CREDENTIALS="/workspaces/cloud-vision-api/vision-api.json"
 ```

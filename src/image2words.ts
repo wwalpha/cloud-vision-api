@@ -30,5 +30,6 @@ export default async (req: Request<any, any, Image2WordsRequest, any>, res: Resp
   // string[][] -> string[]
   const merged = values?.reduce((prev, next) => prev.concat(next));
 
-  res.status(200).send(Array.from(new Set(merged)));
+  // res.status(200).send(Array.from(new Set(merged)));
+  res.status(200).send();
 };
