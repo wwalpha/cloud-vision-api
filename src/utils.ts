@@ -57,6 +57,7 @@ const reg = new RegExp(/^[A-Za-z]+$/);
 export const filterLanguageCode = (languageCode: string, symbols: protos.google.cloud.vision.v1.ISymbol[]) => {
   return symbols.filter((symbol) => {
     if (symbol.property === null) return true;
+    if (symbol.property?.detectedLanguages && symbol.property?.detectedLanguages.length === 0) return true;
 
     const length = symbol.property?.detectedLanguages?.filter((item) => item.languageCode === languageCode).length;
 

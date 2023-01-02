@@ -46,22 +46,22 @@ export default async (req: Request<any, any, Image2LinesRequest, any>, res: Resp
 
   const ordered = orderBy(merged, ['y', 'x']);
 
-  const lines: string[] = [];
+  const lines: string[] = ordered.map((item) => item.word);
 
-  ordered.forEach((item, idx, array) => {
-    if (idx === 0) {
-      lines.push(item.word);
-    } else {
-      const prev = array[idx - 1].y;
-      const curr = item.y;
+  // ordered.forEach((item, idx, array) => {
+  //   if (idx === 0) {
+  //     lines.push(item.word);
+  //   } else {
+  //     const prev = array[idx - 1].y;
+  //     const curr = item.y;
 
-      if (prev !== curr) {
-        lines.push('\n');
-      }
+  //     if (prev !== curr) {
+  //       lines.push('\n');
+  //     }
 
-      lines.push(item.word);
-    }
-  });
+  //     lines.push(item.word);
+  //   }
+  // });
 
-  res.status(200).send([lines.join('')]);
+  res.status(200).send(lines);
 };

@@ -2,7 +2,7 @@ import axios from 'axios';
 import * as fs from 'fs';
 
 const start = async () => {
-  const content = fs.readFileSync('./test/IMG.PNG', {
+  const content = fs.readFileSync('./test/476.jpg', {
     encoding: 'base64',
   });
 
