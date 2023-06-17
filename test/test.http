@@ -1,0 +1,4 @@
+POST http://localhost:8080/image2texts
+Content-Type: multipart/form-data
+
+< ./476.jpg
