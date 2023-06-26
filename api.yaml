@@ -58,3 +58,14 @@ paths:
             type: string
       security:
         - api_key: []
+  /pdf2lines:
+    post:
+      summary: pdf2lines
+      operationId: pdf2lines
+      responses:
+        '200':
+          description: A successful response
+          schema:
+            type: string
+      security:
+        - api_key: []
