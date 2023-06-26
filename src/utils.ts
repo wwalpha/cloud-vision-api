@@ -22,7 +22,7 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
       // empty check
       if (words === null || words === undefined) return undefined;
 
-      const items = words.map(({ symbols }) => {
+      const items = words.map(({ symbols, boundingBox }) => {
         // empty check
         if (symbols === null || symbols === undefined) return undefined;
 
@@ -31,7 +31,7 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
         // empty check
         if (results.length === 0) return undefined;
 
-        return filterSymbolsJP(results);
+        return filterSymbolsJP(results, boundingBox?.normalizedVertices);
       });
 
       const lines = items.filter((s): s is Exclude<typeof s, undefined> => s !== undefined);
@@ -40,7 +40,7 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
 
       const hirakana = filterHirakana(lines);
 
-      console.log('hirakana', hirakana);
+      // console.log('hirakana', hirakana);
 
       return hirakana;
     })
@@ -92,7 +92,10 @@ export const filterSymbols = (symbols: protos.google.cloud.vision.v1.ISymbol[]) 
   return word;
 };
 
-export const filterSymbolsJP = (symbols: protos.google.cloud.vision.v1.ISymbol[]): SymbolLine => {
+export const filterSymbolsJP = (
+  symbols: protos.google.cloud.vision.v1.ISymbol[],
+  vertices: protos.google.cloud.vision.v1.INormalizedVertex[] | null | undefined
+): SymbolLine => {
   const word = symbols
     ?.map((item) => {
       let endfix = '';
@@ -113,7 +116,8 @@ export const filterSymbolsJP = (symbols: protos.google.cloud.vision.v1.ISymbol[]
     .join('')
     .trim();
 
-  const positions = getPositions(symbols);
+  // check symbol mark
+  const positions = getPositions(vertices);
 
   return {
     x: positions[0],
@@ -122,18 +126,19 @@ export const filterSymbolsJP = (symbols: protos.google.cloud.vision.v1.ISymbol[]
   };
 };
 
-const getPositions = (symbols: protos.google.cloud.vision.v1.ISymbol[]) => {
-  let x = 999999;
-  let y = 999999;
+const getPositions = (vertices: protos.google.cloud.vision.v1.INormalizedVertex[] | null | undefined) => {
+  let x = 99999999;
+  let y = 99999999;
 
-  symbols.forEach((s) => {
-    s.boundingBox?.vertices?.forEach((v) => {
-      if (v.x !== null && v.x !== undefined && v.x < x) x = v.x;
-      if (v.y !== null && v.y !== undefined && v.y < y) y = v.y;
-    });
+  // required check
+  if (vertices === null || vertices === undefined) return [x, y];
+
+  vertices.forEach((v) => {
+    if (v.x !== null && v.x !== undefined && v.x < x) x = v.x;
+    if (v.y !== null && v.y !== undefined && v.y < y) y = v.y;
   });
 
-  return [Math.floor(x / 10) * 10, Math.floor(y / 10) * 10];
+  return [Math.floor(x * 1000), Math.floor(y * 1000)];
 };
 
 const KANA = [
@@ -212,7 +217,6 @@ export const filterHirakana = (lines: SymbolLine[]): SymbolLine | undefined => {
 const hirakanaJoin = (lines: SymbolLine[]): SymbolLine => {
   const line = lines.map((item) => item.word).join('');
 
-  console.log('hirakanaJoin', lines);
   return {
     x: lines[0].x,
     y: lines[0].y,

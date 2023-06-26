@@ -26,3 +26,10 @@ export interface SymbolLine {
   y: number;
   word: string;
 }
+
+export interface Pdf2LinesRequest {
+  content: string;
+  language: string;
+}
+
+export type Pdf2LinesResponse = string[];

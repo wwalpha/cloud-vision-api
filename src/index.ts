@@ -4,6 +4,7 @@ import cors from 'cors';
 import Image2Lines from './image2lines';
 import Image2Words from './image2words';
 import Image2Texts from './image2texts';
+import Pdf2Lines from './pdf2lines';
 import Handwriting from './handwriting';
 
 const app = express();
@@ -31,6 +32,9 @@ app.post('/image2words', (req, res) => Image2Words(req, res));
 
 // image to texts
 app.post('/image2texts', (req, res) => Image2Texts(req, res));
+
+// pdf to lines
+app.post('/pdf2lines', (req, res) => Pdf2Lines(req, res));
 
 // hand writing image to text
 app.post('/handwriting', (req, res) => Handwriting(req, res));
