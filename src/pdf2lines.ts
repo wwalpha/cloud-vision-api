@@ -49,7 +49,7 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
     ?.map((page) => {
       // page blocks to lines
       const words = page.blocks
-        ?.map((block) => getInlineWords('jp', block))
+        ?.map((block) => getInlineWords(block))
         .filter((item): item is Exclude<typeof item, undefined> => item !== undefined);
 
       // string[][] -> string[]
@@ -136,7 +136,7 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
   return response;
 };
 
-export const getInlineWords = (languageCode: string, block: protos.google.cloud.vision.v1.IBlock) => {
+export const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
   const paragraphs = block.paragraphs;
 
   const inlineWords = paragraphs
@@ -149,11 +149,11 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
           if (symbols === null || symbols === undefined) return undefined;
 
           // filter by language code
-          const results = filterLanguageCode(languageCode, symbols);
+          // const results = filterLanguageCode(languageCode, symbols);
           // empty check
-          if (results.length === 0) return undefined;
+          if (symbols.length === 0) return undefined;
 
-          return filterSymbolsJP(results, boundingBox?.normalizedVertices);
+          return filterSymbolsJP(symbols, boundingBox?.normalizedVertices);
         })
         .filter((s): s is Exclude<typeof s, undefined> => s !== undefined);
 
