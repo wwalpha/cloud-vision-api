@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { filterLanguageCode, getClient } from './utils';
+import { getClient } from './utils';
 import { Pdf2LinesResponse, Pdf2LinesRequest, SymbolLine } from 'typings/types';
 import { protos } from '@google-cloud/vision';
 import _, { orderBy } from 'lodash';
@@ -31,7 +31,7 @@ export default async (req: Request<any, any, Pdf2LinesRequest, any>, res: Respon
     return;
   }
 
-  // fs.writeFileSync('./pages.json', JSON.stringify(pages, null, 2));
+  // fs.writeFileSync('./pages5.json', JSON.stringify(pages));
 
   const results = pages
     .map((page) => {
@@ -117,12 +117,11 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
       const contents = content.split('・');
 
       const row = `${subject?.word.slice(-2)}
-      |${num?.word.slice(-4)}
-      |週テスト
+      |${num?.word.split('実施')[1]}
       |${contents[0]}
-      |${contents.length > 1 ? contents[1] : ''}
+      |${contents.length > 1 ? contents[1] : contents[0]}
       |${rate}
-      |${question}
+      |${convertQuestion(question)}
       `
         .replace(/ /g, '')
         .replace(/\n/g, '')
@@ -136,7 +135,7 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
   return response;
 };
 
-export const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
+const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
   const paragraphs = block.paragraphs;
 
   const inlineWords = paragraphs
@@ -176,6 +175,7 @@ const getSymbols = (values: SymbolLine[][] | undefined): SymbolLine[] => {
   const symbols = values
     .reduce((prev, next) => prev.concat(next), [])
     .filter((item) => {
+      if (item.y === 64) return false;
       if (item.y === 67 && item.x > 820) return false;
       if (103 <= item.y && item.y <= 118) return false;
       if (item.y < 120 && excludeSymbols.includes(item.word)) return false;
@@ -270,9 +270,36 @@ const symbolsJoin = (symbols: SymbolLine[]): SymbolLine[] => {
   return values;
 };
 
+const convertQuestion = (text: string): string => {
+  const str = text.replace(/ /g, '-').replace(/問/g, '');
+
+  const index = str.indexOf('(');
+  if (index === -1) return str;
+
+  return str
+    .replace(/-\(1\)/g, '-1')
+    .replace(/-\(2\)/g, '-2')
+    .replace(/-\(3\)/g, '-3')
+    .replace(/-\(4\)/g, '-4')
+    .replace(/-\(5\)/g, '-5')
+    .replace(/-\(6\)/g, '-6')
+    .replace(/-\(7\)/g, '-7')
+    .replace(/-\(8\)/g, '-8')
+    .replace(/-\(9\)/g, '-9')
+    .replace(/\(1\)/g, '-1')
+    .replace(/\(2\)/g, '-2')
+    .replace(/\(3\)/g, '-3')
+    .replace(/\(4\)/g, '-4')
+    .replace(/\(5\)/g, '-5')
+    .replace(/\(6\)/g, '-6')
+    .replace(/\(7\)/g, '-7')
+    .replace(/\(8\)/g, '-8')
+    .replace(/\(9\)/g, '-9');
+};
+
 const debug = () => {
   const pages: protos.google.cloud.vision.v1.IAnnotateImageResponse[] = JSON.parse(
-    fs.readFileSync('./pages.json', 'utf-8').toString()
+    fs.readFileSync('./pages5.json', 'utf-8').toString()
   );
 
   // const results = pages
@@ -283,7 +310,7 @@ const debug = () => {
   //   })
   //   .reduce((prev, next) => prev.concat(next), []);
 
-  const singlePage = pages[1].fullTextAnnotation?.pages;
+  const singlePage = pages[0].fullTextAnnotation?.pages;
 
   const results = start(singlePage);
   console.log(results);
