@@ -105,7 +105,7 @@ export const filterSymbolsJP = (
           endfix = ' ';
           break;
         case 'EOL_SURE_SPACE':
-          endfix = '\n';
+          // endfix = '\n';
           break;
         default:
           break;
@@ -113,8 +113,7 @@ export const filterSymbolsJP = (
 
       return `${item.text}${endfix}`;
     })
-    .join('')
-    .trim();
+    .join('');
 
   // check symbol mark
   const positions = getPositions(vertices);
