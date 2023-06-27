@@ -175,8 +175,7 @@ const getSymbols = (values: SymbolLine[][] | undefined): SymbolLine[] => {
   const symbols = values
     .reduce((prev, next) => prev.concat(next), [])
     .filter((item) => {
-      if (item.y === 64) return false;
-      if (item.y === 67 && item.x > 820) return false;
+      if (64 <= item.y && item.y <= 67 && item.x >= 800) return false;
       if (103 <= item.y && item.y <= 118) return false;
       if (item.y < 120 && excludeSymbols.includes(item.word)) return false;
 
