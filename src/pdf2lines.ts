@@ -31,6 +31,8 @@ export default async (req: Request<any, any, Pdf2LinesRequest, any>, res: Respon
     return;
   }
 
+  // fs.writeFileSync('./pages.json', JSON.stringify(pages, null, 2));
+
   const results = pages
     .map((page) => {
       const singlePage = page.fullTextAnnotation?.pages;
@@ -43,8 +45,6 @@ export default async (req: Request<any, any, Pdf2LinesRequest, any>, res: Respon
 };
 
 const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) => {
-  // const pages: protos.google.cloud.vision.v1.IPage[] = JSON.parse(fs.readFileSync('./pages.json', 'utf-8').toString());
-
   const values = pages
     ?.map((page) => {
       // page blocks to lines
@@ -59,9 +59,17 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
     })
     .filter((item): item is Exclude<typeof item, undefined> => item !== undefined);
 
-  const symbols = values?.reduce((prev, next) => prev.concat(next), []);
+  let symbols = getSymbols(values);
+  // 回数
+  const num = symbols?.find((s) => s.y === 30);
+  // 科目
+  const subject = symbols?.find((s) => (s.y === 65 || s.y === 64) && s.x >= 140);
 
-  // const excludes = ['10', '12', '64'];
+  // 不要な情報を削除する
+  symbols = removeSymbol(symbols, num);
+  // 不要な情報を削除する
+  symbols = removeSymbol(symbols, subject);
+
   const fixedOffset = _.chain(symbols)
     .groupBy('y')
     .map((value, key) => {
@@ -101,9 +109,24 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
         .map((v) => v.word)
         .join('');
 
-      const row = `${content}|${rate}|${question}`.replace(/ /g, '');
+      // empty string
+      if (content.trim().length === 0 && rate.trim().length === 0 && question.trim().length === 0) {
+        return;
+      }
 
-      if (row === '||') return;
+      const contents = content.split('・');
+
+      const row = `${subject?.word.slice(-2)}
+      |${num?.word.slice(-4)}
+      |週テスト
+      |${contents[0]}
+      |${contents.length > 1 ? contents[1] : ''}
+      |${rate}
+      |${question}
+      `
+        .replace(/ /g, '')
+        .replace(/\n/g, '')
+        .replace(/【復習】/g, '');
 
       return row;
     })
@@ -145,6 +168,36 @@ export const getInlineWords = (languageCode: string, block: protos.google.cloud.
   return inlineWords.reduce((prev, next) => prev.concat(next), []);
 };
 
+const getSymbols = (values: SymbolLine[][] | undefined): SymbolLine[] => {
+  if (!values) return [];
+
+  const excludeSymbols = ['·'];
+
+  const symbols = values
+    .reduce((prev, next) => prev.concat(next), [])
+    .filter((item) => {
+      if (item.y === 67 && item.x > 820) return false;
+      if (103 <= item.y && item.y <= 118) return false;
+      if (item.y < 120 && excludeSymbols.includes(item.word)) return false;
+
+      return true;
+    });
+
+  // fs.writeFileSync('./symbols.json', JSON.stringify(symbols));
+  return symbols;
+};
+
+const removeSymbol = (symbols: SymbolLine[], object: SymbolLine | undefined) => {
+  if (!object) return symbols;
+
+  return symbols.filter((s) => {
+    if (s.x !== object.x) return true;
+    if (s.y !== object.y) return true;
+
+    return s.word !== object.word;
+  });
+};
+
 const filterSymbolsJP = (
   symbols: protos.google.cloud.vision.v1.ISymbol[],
   vertices: protos.google.cloud.vision.v1.INormalizedVertex[] | null | undefined
@@ -158,7 +211,6 @@ const filterSymbolsJP = (
           endfix = ' ';
           break;
         case 'EOL_SURE_SPACE':
-          // endfix = '\n';
           break;
         default:
           break;
@@ -217,3 +269,24 @@ const symbolsJoin = (symbols: SymbolLine[]): SymbolLine[] => {
 
   return values;
 };
+
+const debug = () => {
+  const pages: protos.google.cloud.vision.v1.IAnnotateImageResponse[] = JSON.parse(
+    fs.readFileSync('./pages.json', 'utf-8').toString()
+  );
+
+  // const results = pages
+  //   .map((page) => {
+  //     const singlePage = page.fullTextAnnotation?.pages;
+
+  //     return start(singlePage);
+  //   })
+  //   .reduce((prev, next) => prev.concat(next), []);
+
+  const singlePage = pages[1].fullTextAnnotation?.pages;
+
+  const results = start(singlePage);
+  console.log(results);
+};
+
+// debug();
