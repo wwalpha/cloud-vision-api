@@ -31,7 +31,7 @@ export default async (req: Request<any, any, Pdf2LinesRequest, any>, res: Respon
     return;
   }
 
-  // fs.writeFileSync('./pages5.json', JSON.stringify(pages));
+  // fs.writeFileSync('./pages.json', JSON.stringify(pages));
 
   const results = pages
     .map((page) => {
@@ -70,6 +70,7 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
   // 不要な情報を削除する
   symbols = removeSymbol(symbols, subject);
 
+  // console.log(symbols);
   const fixedOffset = _.chain(symbols)
     .groupBy('y')
     .map((value, key) => {
@@ -89,21 +90,21 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
       if (Number(key) < 120) return value.map((v) => v.word).join('');
 
       const question = orderBy(
-        value.filter((v) => 80 <= v.x && v.x <= 200),
+        value.filter((v) => 75 <= v.x && v.x <= 200),
         'x'
       )
         .map((v) => v.word)
         .join('');
 
       const content = orderBy(
-        value.filter((v) => 220 <= v.x && v.x <= 600),
+        value.filter((v) => 210 <= v.x && v.x <= 600),
         'x'
       )
         .map((v) => v.word)
         .join('');
 
       const rate = orderBy(
-        value.filter((v) => 620 <= v.x && v.x <= 660),
+        value.filter((v) => 616 <= v.x && v.x <= 660),
         'x'
       )
         .map((v) => v.word)
@@ -201,18 +202,15 @@ const filterSymbolsJP = (
   symbols: protos.google.cloud.vision.v1.ISymbol[],
   vertices: protos.google.cloud.vision.v1.INormalizedVertex[] | null | undefined
 ): SymbolLine => {
+  // const singles = symbols.filter((item) => item.property?.detectedBreak?.type !== 'EOL_SURE_SPACE');
+  // const multiples = symbols.filter((item) => item.property?.detectedBreak?.type === 'EOL_SURE_SPACE');
+
   const word = symbols
     ?.map((item) => {
       let endfix = '';
 
-      switch (item.property?.detectedBreak?.type) {
-        case 'SPACE':
-          endfix = ' ';
-          break;
-        case 'EOL_SURE_SPACE':
-          break;
-        default:
-          break;
+      if (item.property?.detectedBreak?.type === 'SPACE') {
+        endfix = ' ';
       }
 
       return `${item.text}${endfix}`;
@@ -298,7 +296,7 @@ const convertQuestion = (text: string): string => {
 
 const debug = () => {
   const pages: protos.google.cloud.vision.v1.IAnnotateImageResponse[] = JSON.parse(
-    fs.readFileSync('./pages5.json', 'utf-8').toString()
+    fs.readFileSync('./pages.json', 'utf-8').toString()
   );
 
   // const results = pages
