@@ -97,7 +97,7 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
         .join('');
 
       const content = orderBy(
-        value.filter((v) => 210 <= v.x && v.x <= 600),
+        value.filter((v) => 210 <= v.x && v.x <= 590),
         'x'
       )
         .map((v) => v.word)
