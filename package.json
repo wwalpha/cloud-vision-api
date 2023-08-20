@@ -9,7 +9,7 @@
     "prebuild": "tsc",
     "build": "docker build -t vision .",
     "test": "ts-node test/test.ts",
-    "test2": "ts-node src/pdf2lines.ts"
+    "test2": "ts-node src/image2lines.ts"
   },
   "devDependencies": {
     "@types/cors": "^2.8.6",
