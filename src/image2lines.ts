@@ -4,9 +4,13 @@ import { Image2LinesResponse, Image2LinesRequest, SymbolLine } from 'typings/typ
 import { protos } from '@google-cloud/vision';
 import _, { orderBy } from 'lodash';
 import * as fs from 'fs';
+import { imageSize } from 'image-size';
+import { ISizeCalculationResult } from 'image-size/dist/types/interface';
 
 export default async (req: Request<any, any, Image2LinesRequest, any>, res: Response<Image2LinesResponse>) => {
   const request = req.body;
+
+  const dimension = imageSize(Buffer.from(request.content, 'base64'));
 
   const [response] = await getClient().textDetection({
     image: {
@@ -23,12 +27,12 @@ export default async (req: Request<any, any, Image2LinesRequest, any>, res: Resp
     return;
   }
 
-  const results = start(pages);
+  const results = start(pages, dimension);
 
   res.status(200).send(results);
 };
 
-const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) => {
+const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined, dimension: ISizeCalculationResult) => {
   const values = pages
     ?.map((page) => {
       // page blocks to lines
@@ -43,38 +47,42 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined) 
     })
     .filter((item): item is Exclude<typeof item, undefined> => item !== undefined);
 
-  const symbols = getSymbols(values);
+  if (values === undefined || values.length === 0) return;
 
-  const fixedOffset = _.chain(symbols)
-    .groupBy('y')
-    .map((value, key) => {
-      const offset = Math.floor(Number(key) / 4);
+  const lines = values.reduce((prev, next) => prev.concat(next), []);
+  let results: string[] = [];
 
-      return value.map((item) => ({ ...item, y: offset * 4 }));
-    })
-    .value()
-    .reduce((prev, next) => prev.concat(next), []);
+  if (dimension.width === undefined || dimension.height === undefined) {
+    return results;
+  }
 
-  const response = _.chain(fixedOffset)
-    .groupBy('y')
-    .map((value, key) => {
-      const content = orderBy(value, 'x')
-        .map((v) => v.word)
-        .join('');
+  if (dimension.width > dimension.height) {
+    results = _.chain(lines)
+      .sortBy('y')
+      .groupBy('y')
+      .map((line) => {
+        const value = line
+          .sort((a, b) => a.x - b.x)
+          .map((item) => {
+            return item.word;
+          })
+          .join('');
 
-      return content;
-    })
-    .value()
-    .filter((item): item is Exclude<typeof item, undefined> => item !== undefined);
+        return value;
+      })
+      .value();
+  } else {
+    results = lines.map((item) => item.word);
+  }
 
-  return response;
+  return results;
 };
 
 const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
   const paragraphs = block.paragraphs;
 
   const inlineWords = paragraphs
-    ?.map((paragraph) => {
+    ?.map<SymbolLine | undefined>((paragraph) => {
       const words = paragraph.words;
 
       const lines = words
@@ -93,37 +101,26 @@ const getInlineWords = (block: protos.google.cloud.vision.v1.IBlock) => {
 
       if (lines === undefined || lines.length === 0) return undefined;
 
-      return symbolsJoin(lines);
+      const vertices = paragraph.boundingBox?.vertices;
+      if (vertices === null || vertices === undefined || vertices.length === 0) return undefined;
+
+      return {
+        x: vertices[0].x || 0,
+        y: Math.round((vertices[0].y || 0) / 10) * 10,
+        word: symbolsJoin(lines),
+      };
     })
     .filter((item): item is Exclude<typeof item, undefined> => item !== undefined);
 
   if (inlineWords === undefined || inlineWords.length === 0) return undefined;
 
-  return inlineWords.reduce((prev, next) => prev.concat(next), []);
-};
-
-const getSymbols = (values: SymbolLine[][] | undefined): SymbolLine[] => {
-  if (!values) return [];
-
-  const excludeSymbols = ['·'];
-
-  const symbols = values
-    .reduce((prev, next) => prev.concat(next), [])
-    .filter((item) => {
-      if (64 <= item.y && item.y <= 67 && item.x >= 800) return false;
-      if (103 <= item.y && item.y <= 118) return false;
-      if (item.y < 120 && excludeSymbols.includes(item.word)) return false;
-
-      return true;
-    });
-
-  return symbols;
+  return inlineWords;
 };
 
 const filterSymbolsJP = (
   symbols: protos.google.cloud.vision.v1.ISymbol[],
   vertices: protos.google.cloud.vision.v1.INormalizedVertex[] | null | undefined
-): SymbolLine => {
+): SymbolLine | undefined => {
   // const singles = symbols.filter((item) => item.property?.detectedBreak?.type !== 'EOL_SURE_SPACE');
   // const multiples = symbols.filter((item) => item.property?.detectedBreak?.type === 'EOL_SURE_SPACE');
 
@@ -139,59 +136,26 @@ const filterSymbolsJP = (
     })
     .join('');
 
-  // check symbol mark
-  const positions = getPositions(vertices);
+  if (word.trim().length === 0) return;
 
   return {
-    x: positions[0],
-    y: positions[1],
+    x: 0,
+    y: 0,
     word: word,
   };
 };
 
-const getPositions = (vertices: protos.google.cloud.vision.v1.INormalizedVertex[] | null | undefined) => {
-  let x = 99999999;
-  let y = 99999999;
-
-  // required check
-  if (vertices === null || vertices === undefined) return [x, y];
-
-  vertices.forEach((v) => {
-    if (v.x !== null && v.x !== undefined && v.x < x) x = v.x;
-    if (v.y !== null && v.y !== undefined && v.y < y) y = v.y;
-  });
-
-  return [x, y];
-};
-
-const symbolsJoin = (symbols: SymbolLine[]): SymbolLine[] => {
-  const values = _.chain(symbols)
-    .groupBy('y')
-    .map<SymbolLine>((value) => {
-      let filters: SymbolLine[] = value;
-
-      if (value.length > 1 && value.find((item) => 606 <= item.x || item.x <= 608)) {
-        filters = value.filter((item) => 606 > item.x || item.x > 608);
-      }
-
-      const newArray = orderBy(filters, ['x'], ['asc']);
-      const newWord = newArray.map((item) => item.word).join('');
-
-      return {
-        x: newArray[0].x,
-        y: value[0].y,
-        word: newWord,
-      };
-    })
-    .value();
-
-  return values;
+const symbolsJoin = (symbols: SymbolLine[]): string => {
+  return symbols.map((item) => item.word).join('');
 };
 
 const debug = () => {
   const pages: protos.google.cloud.vision.v1.IPage[] = JSON.parse(fs.readFileSync('./pages.json', 'utf-8').toString());
 
-  const results = start(pages);
+  const results = start(pages, {
+    width: 100,
+    height: 200,
+  });
   console.log(results);
 };
 
