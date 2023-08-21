@@ -24,7 +24,7 @@ jobs:
       # install nodejs
       - uses: actions/setup-node@master
         with:
-          node-version: 12.x
+          node-version: 18.x
 
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
