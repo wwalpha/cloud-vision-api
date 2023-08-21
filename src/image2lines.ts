@@ -56,7 +56,10 @@ const start = (pages: protos.google.cloud.vision.v1.IPage[] | null | undefined, 
     return results;
   }
 
-  if (dimension.width > dimension.height) {
+  if (
+    (dimension.orientation === 6 && dimension.width < dimension.height) ||
+    (dimension.orientation !== 6 && dimension.width > dimension.height)
+  ) {
     results = _.chain(lines)
       .sortBy('y')
       .groupBy('y')
